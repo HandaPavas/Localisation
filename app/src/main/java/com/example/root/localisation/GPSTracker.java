@@ -17,6 +17,7 @@ import android.provider.Settings;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 /**
  * Created by root on 11/27/16.
@@ -46,8 +47,6 @@ public class GPSTracker extends Service implements LocationListener {
         try {
             locationManager = (LocationManager) mContext
                     .getSystemService(LOCATION_SERVICE);
-            Criteria locationCritera = new Criteria();
-            String providerName = locationManager.getBestProvider(locationCritera, true);
 
 
             isgpsenabled = locationManager
@@ -59,31 +58,38 @@ public class GPSTracker extends Service implements LocationListener {
 
             if (!isgpsenabled && !isnetworkenabled) {
 
+                Log.i("Network", "Disabled");
+
             } else {
                 this.cangetlocation = true;
+                Log.i("Network", "enabled");
 
                 if (isnetworkenabled) {
+                    Log.i("Network", "enabled");
                     locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER,
                             MIN_TIME_BW_UPDATES,
                             MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
                     Log.d("Network", "Network");
                     if (locationManager != null) {
-                        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                            if (providerName != null)
-                                location = locationManager
-                                        .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-                            if (location != null) {
-                                latitude = location.getLatitude();
-                                System.out.print(latitude);
-                                longitude = location.getLongitude();
-                                System.out.print(longitude);
-                            }
+                        Log.i("Network", "Inside Location Manager: ");
+
+
+                        location = locationManager
+                                .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+                        if (location != null) {
+                            Log.i("Network", "Inside Location : ");
+                            latitude = location.getLatitude();
+                            System.out.print(latitude);
+                            longitude = location.getLongitude();
+                            System.out.print(longitude);
                         }
+
 
                     }
                 }
 
                 if (isgpsenabled) {
+                    // Toast.makeText(getApplicationContext(),"Inside Network Enabled by Gps",Toast.LENGTH_SHORT).show();
                     if (location == null) {
                         locationManager.requestLocationUpdates(
                                 LocationManager.GPS_PROVIDER,
@@ -91,9 +97,9 @@ public class GPSTracker extends Service implements LocationListener {
                                 MIN_DISTANCE_CHANGE_FOR_UPDATES, this);
                         Log.d("GPS Enabled", "GPS Enabled");
                         if (locationManager != null) {
-                            if (providerName != null)
-                                location = locationManager
-                                        .getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
+                            location = locationManager
+                                    .getLastKnownLocation(LocationManager.GPS_PROVIDER);
                             if (location != null) {
                                 latitude = location.getLatitude();
                                 System.out.print(latitude);
@@ -115,8 +121,10 @@ public class GPSTracker extends Service implements LocationListener {
 
     public double getLatitude() {
         if (location != null) {
+
             latitude = location.getLatitude();
         }
+
 
 
         return latitude;
@@ -166,27 +174,15 @@ public class GPSTracker extends Service implements LocationListener {
     }
 
     @Override
-    public void onLocationChanged(Location location) {
+    public void onLocationChanged(Location loc) {
 
-        String providerName = location.getProvider();
-
-        if (providerName.equals(LocationManager.GPS_PROVIDER)) {
-
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                location = locationManager
-                        .getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            }
+        // Toast.makeText(getApplicationContext(), location.toString(), Toast.LENGTH_LONG).show();
+        if(location!=null) {
+            latitude =  location.getLatitude();
+            longitude = location.getLongitude();
         }
 
-        if (providerName.equals(LocationManager.NETWORK_PROVIDER)) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                location = locationManager
-                        .getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
-            }
 
-
-        }
-        this.location=location;
     }
 
     @Override
