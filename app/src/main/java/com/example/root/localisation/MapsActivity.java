@@ -1,13 +1,17 @@
 package com.example.root.localisation;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.location.Geocoder;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
@@ -16,6 +20,7 @@ import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
 import com.firebase.client.FirebaseError;
 import com.firebase.client.ValueEventListener;
+import com.firebase.client.core.Context;
 import com.google.android.gms.identity.intents.Address;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -33,10 +38,12 @@ import java.util.Locale;
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private GoogleMap mMap;
+    final MapsActivity context = this;
     private Firebase mFirebase;
     double latitude,longitude;
     String userId;
     Button btnShowLocation;
+    String chemist;
     GPSTracker gps;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,16 +58,52 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mFirebase = new Firebase("https://localisation-b533c.firebaseio.com/Locations");
 
         btnShowLocation = (Button) findViewById(R.id.btnShowLocation);
+
         btnShowLocation.setOnClickListener(new View.OnClickListener() {
 
             @Override
-            public void onClick(View view) {
+            public void onClick(final View view) {
 
-                try {
-                    onSearch(view);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                LayoutInflater li = LayoutInflater.from(context);
+                View promptsView = li.inflate(R.layout.prompts, null);
+
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+                        context);
+
+
+                alertDialogBuilder.setView(promptsView);
+
+                final EditText userInput = (EditText) promptsView
+                        .findViewById(R.id.description);
+
+
+                alertDialogBuilder
+                        .setCancelable(false)
+                        .setPositiveButton("OK",
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog,int id) {
+
+                                       chemist=userInput.getText().toString();
+                                        try {
+                                            onSearch(view);
+                                        } catch (IOException e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                })
+                        .setNegativeButton("Cancel",
+                                new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface dialog, int id) {
+                                        dialog.cancel();
+                                    }
+                                });
+
+
+                AlertDialog alertDialog = alertDialogBuilder.create();
+
+
+                alertDialog.show();
+
 
             }
         });
@@ -90,12 +133,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             double lat=latitude;
             double lng=longitude;
             userId = mFirebase.push().getKey();
-            LocationDetails location = new LocationDetails(address,city,lat,lng);
+            LocationDetails location = new LocationDetails(chemist,address,city,lat,lng);
             mFirebase.child(userId).setValue(location);
 
             if(mMap != null){
                 Log.i("onSearch:","mMap not null");
-                mMap.addMarker(new MarkerOptions().position(currentlocation).title(address+"\n"+city));
+                mMap.addMarker(new MarkerOptions().position(currentlocation).title(chemist).snippet(address+"\n"+city));
                 mMap.moveCamera(CameraUpdateFactory.newLatLng(currentlocation));
                 mMap.animateCamera(CameraUpdateFactory.zoomTo(15));
             }
@@ -117,7 +160,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onChildAdded(DataSnapshot dataSnapshot, String prevChildKey) {
                 LocationDetails viewlocation = dataSnapshot.getValue(LocationDetails.class);
                 LatLng location = new LatLng(viewlocation.lati, viewlocation.longi);
-                mMap.addMarker(new MarkerOptions().position(location).title(viewlocation.address+"\n"+viewlocation.city));
+                mMap.addMarker(new MarkerOptions().position(location).title(viewlocation.description).snippet(viewlocation.address+
+                        "\n"+viewlocation.city));
                 //mMap.moveCamera(CameraUpdateFactory.newLatLng(location));
             }
 

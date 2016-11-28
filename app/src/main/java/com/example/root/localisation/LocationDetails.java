@@ -6,6 +6,7 @@ package com.example.root.localisation;
 public class LocationDetails {
     public String address;
     public String city;
+    public String description;
     double lati;
     double longi;
 
@@ -13,7 +14,8 @@ public class LocationDetails {
     public LocationDetails() {
     }
 
-    public LocationDetails(String address, String city, double latitude, double longitude) {
+    public LocationDetails(String description, String address, String city, double latitude, double longitude) {
+        this.description = description;
         this.address = address;
         this.city = city;
         this.lati = latitude;
